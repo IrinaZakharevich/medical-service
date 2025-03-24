@@ -3,6 +3,21 @@ from django.utils.timezone import now
 
 
 class Refbook(models.Model):
+    """
+    Reference Book Model.
+
+    Attributes:
+        code (str): Unique code of the reference book.
+        name (str): Name of the reference book.
+        description (str, optional): Description of the reference book.
+
+    Properties:
+        current_version (str): Current version of the reference book.
+        current_version_start_date (str): Effective start date of the current version.
+
+    Methods:
+        _get_latest_version(): Returns the latest version of the reference book.
+    """
     code = models.CharField(max_length=100, unique=True, verbose_name="Код")
     name = models.CharField(max_length=300, verbose_name="Наименование")
     description = models.TextField(blank=True, null=True, verbose_name="Описание")
@@ -29,6 +44,18 @@ class Refbook(models.Model):
 
 
 class RefbookVersion(models.Model):
+    """
+    Reference Book Version Model.
+
+    Attributes:
+        refbook (Refbook): Associated reference book.
+        version (str): Version of the reference book.
+        start_date (date): Effective start date of the version.
+
+    Meta:
+        constraints: Unique constraint for the pair of refbook and version.
+        ordering: Sorting by descending start date.
+    """
     refbook = models.ForeignKey(Refbook, on_delete=models.CASCADE, related_name='versions',
                                 verbose_name="Идентификатор справочника")
     version = models.CharField(max_length=50, verbose_name="Версия")
@@ -47,6 +74,17 @@ class RefbookVersion(models.Model):
 
 
 class RefbookItem(models.Model):
+    """
+    Reference Book Item Model.
+
+    Attributes:
+        version (RefbookVersion): Associated reference book version.
+        code (str): Item code.
+        value (str): Item value.
+
+    Meta:
+        constraints: Unique constraint for the pair of version and code.
+    """
     version = models.ForeignKey(RefbookVersion, on_delete=models.CASCADE, related_name='items',
                                 verbose_name="Идентификатор версии")
     code = models.CharField(max_length=100, verbose_name="Код элемента")
