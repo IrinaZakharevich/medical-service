@@ -10,52 +10,61 @@ URL_VALIDATE_ITEM = 'refbook-check-item'
 
 
 class RefbookBaseTest(TestCase):
-    def setUp(self):
-        self.client = APIClient()
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.client = APIClient()
 
         # Refbooks
-        self.refbook1 = Refbook.objects.create(code="REF1", name="Refbook 1", description="Description 1")
-        self.refbook2 = Refbook.objects.create(code="REF2", name="Refbook 2", description="Description 2")
-        self.refbook3 = Refbook.objects.create(code="REF3", name="Refbook 3", description="Description 3")
+        cls.refbook1 = Refbook.objects.create(code="REF1", name="Refbook 1", description="Description 1")
+        cls.refbook2 = Refbook.objects.create(code="REF2", name="Refbook 2", description="Description 2")
+        cls.refbook3 = Refbook.objects.create(code="REF3", name="Refbook 3", description="Description 3")
 
         # Dates
-        self.current_date = timezone.now().date()
-        self.one_day_ago = self.current_date - timezone.timedelta(days=1)
-        self.two_days_ago = self.current_date - timezone.timedelta(days=2)
+        cls.current_date = timezone.now().date()
+        cls.one_day_ago = cls.current_date - timezone.timedelta(days=1)
+        cls.two_days_ago = cls.current_date - timezone.timedelta(days=2)
 
         # Versions
-        self.ref1_version = RefbookVersion.objects.create(
-            refbook=self.refbook1,
+        cls.ref1_version = RefbookVersion.objects.create(
+            refbook=cls.refbook1,
             version="1.0",
-            start_date=self.two_days_ago
+            start_date=cls.two_days_ago
         )
-        self.ref2_version_old = RefbookVersion.objects.create(
-            refbook=self.refbook2,
+        cls.ref2_version_old = RefbookVersion.objects.create(
+            refbook=cls.refbook2,
             version="1.0",
-            start_date=self.two_days_ago
+            start_date=cls.two_days_ago
         )
-        self.ref2_version_new = RefbookVersion.objects.create(
-            refbook=self.refbook2,
+        cls.ref2_version_new = RefbookVersion.objects.create(
+            refbook=cls.refbook2,
             version="2.0",
-            start_date=self.current_date
+            start_date=cls.current_date
         )
 
         # Items
-        self.ref2_item1_old = RefbookItem.objects.create(
-            version=self.ref2_version_old,
+        cls.ref2_item1_old = RefbookItem.objects.create(
+            version=cls.ref2_version_old,
             code="ITEM1",
             value="Value 1 old"
         )
-        self.ref2_item1_new = RefbookItem.objects.create(
-            version=self.ref2_version_new,
+        cls.ref2_item1_new = RefbookItem.objects.create(
+            version=cls.ref2_version_new,
             code="ITEM1",
             value="Value 1"
         )
-        self.ref2_item2_new = RefbookItem.objects.create(
-            version=self.ref2_version_new,
+        cls.ref2_item2_new = RefbookItem.objects.create(
+            version=cls.ref2_version_new,
             code="ITEM2",
             value="Value 2"
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        Refbook.objects.all().delete()
+        RefbookVersion.objects.all().delete()
+        RefbookItem.objects.all().delete()
 
 
 class RefbookListViewTest(RefbookBaseTest):
