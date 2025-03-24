@@ -17,9 +17,20 @@ logger = logging.getLogger(__name__)
 
 
 class RefbookListView(generics.ListAPIView):
+    """
+    View for retrieving a list of reference books.
+
+    Supports filtering by date to get reference books with versions effective on or before the specified date.
+    """
     serializer_class = RefbookSerializer
 
     def get_queryset(self):
+        """
+        Returns a queryset of reference books, filtered by date if provided.
+
+        Returns:
+            QuerySet: List of reference books, filtered by date (if specified).
+        """
         queryset = Refbook.objects.all()
         date_param = self.request.query_params.get('date')
 
@@ -64,6 +75,12 @@ class RefbookListView(generics.ListAPIView):
         operation_description="Retrieve a list of refbooks. Optionally filter by a date to get refbooks with versions starting on or before that date.",
     )
     def get(self, request, *args, **kwargs):
+        """
+        Handles GET requests to retrieve a list of reference books.
+
+        Returns:
+            Response: JSON response with reference book data.
+        """
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         formatted_response = {
@@ -73,7 +90,25 @@ class RefbookListView(generics.ListAPIView):
 
 
 class RefbookItemMixin:
+    """
+    Mixin for working with reference book items.
+
+    Provides methods to retrieve reference books and versions with 404 error handling.
+    """
+
     def _get_refbook_or_404(self, refbook_id):
+        """
+        Returns a reference book by ID or raises a 404 exception if the reference book is not found.
+
+        Args:
+            refbook_id (int): ID of the reference book.
+
+        Returns:
+            Refbook: Reference book object.
+
+        Raises:
+            NotFound: If the reference book is not found.
+        """
         try:
             return Refbook.objects.only('id').get(id=refbook_id)
         except Refbook.DoesNotExist:
@@ -81,6 +116,20 @@ class RefbookItemMixin:
             raise NotFound({"error": f"Refbook with ID '{refbook_id}' not found."})
 
     def _get_version_or_404(self, refbook):
+        """
+        Returns a reference book version or raises a 404 exception if the version is not found.
+
+        If no version is specified, returns the latest effective version.
+
+        Args:
+            refbook (Refbook): Reference book object.
+
+        Returns:
+            RefbookVersion: Reference book version object.
+
+        Raises:
+            NotFound: If the version is not found.
+        """
         version_param = self.request.query_params.get('version')
         if version_param:
             try:
@@ -100,9 +149,20 @@ class RefbookItemMixin:
 
 
 class RefbookItemListView(RefbookItemMixin, ListAPIView):
+    """
+    View for retrieving a list of reference book items.
+
+    Supports filtering by reference book version.
+    """
     serializer_class = RefbookItemSerializer
 
     def get_queryset(self):
+        """
+        Returns a queryset of reference book items for the specified version.
+
+        Returns:
+            QuerySet: List of reference book items.
+        """
         refbook_id = self.kwargs.get('id')
         refbook = self._get_refbook_or_404(refbook_id)
         version = self._get_version_or_404(refbook)
@@ -146,6 +206,12 @@ class RefbookItemListView(RefbookItemMixin, ListAPIView):
         }
     )
     def get(self, request, *args, **kwargs):
+        """
+        Handles GET requests to retrieve a list of reference book items.
+
+        Returns:
+            Response: JSON response with reference book item data.
+        """
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         formatted_response = {
@@ -155,6 +221,12 @@ class RefbookItemListView(RefbookItemMixin, ListAPIView):
 
 
 class RefbookItemValidationView(RefbookItemMixin, APIView):
+    """
+    View for validating the existence of a code-value pair in a reference book.
+
+    Supports validation for a specified version or the latest available version.
+    """
+
     @swagger_auto_schema(
         operation_summary="Validate if a code-value pair exists in a refbook version",
         operation_description="Checks whether a specific code and value exist in the latest or specified version of a refbook.",
@@ -232,6 +304,12 @@ class RefbookItemValidationView(RefbookItemMixin, APIView):
         }
     )
     def get(self, request, *args, **kwargs):
+        """
+        Handles GET requests to validate the existence of a code-value pair in a reference book.
+
+        Returns:
+            Response: JSON response with the validation result.
+        """
         refbook_id = self.kwargs.get('id')
         code = request.query_params.get('code')
         value = request.query_params.get('value')
